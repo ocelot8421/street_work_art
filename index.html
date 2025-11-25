@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Street_Work_Art</title>
+  <title>Perspektivikus Utcakép Demo</title>
   <style>
     body {
       margin: 0;
       background: #111;
-      height: 3000px;
+      height: 3000px; /* görgethető tér */
     }
     canvas {
       position: fixed;
@@ -23,63 +23,88 @@
   <canvas id="street"></canvas>
 
   <script>
-    const canvas = document.getElementById("street");
-    const ctx = canvas.getContext("2d");
+    class StreetScene {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext("2d");
+        this.scrollFactor = 0.5; // mennyire "haladunk" a scrollhoz képest
 
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener("resize", resize);
-    resize();
+        this.onResize = this.onResize.bind(this);
+        this.onScroll = this.onScroll.bind(this);
+        this.loop = this.loop.bind(this);
 
-    // fő függvény – scroll alapján rajzoljuk a perspektívát
-    function draw() {
-      const w = canvas.width;
-      const h = canvas.height;
-      const scroll = window.scrollY; // mennyire "haladtunk" előre
+        this.scrollY = window.scrollY;
 
-      ctx.clearRect(0, 0, w, h);
-      ctx.strokeStyle = "white";
-      ctx.lineWidth = 2;
+        window.addEventListener("resize", this.onResize);
+        window.addEventListener("scroll", this.onScroll);
 
-      const horizonY = h * 0.3; // horizont
-      const roadWidth = 400;    // út szélessége, ami "távolodik"
-
-      // perspektíva miatt az út szélessége csökken
-      const depth = scroll * 0.5; // mintha előre mennénk
-
-      const leftX = w / 2 - (roadWidth - depth) / 2;
-      const rightX = w / 2 + (roadWidth - depth) / 2;
-
-      // út szélei
-      ctx.beginPath();
-      ctx.moveTo(leftX, horizonY);
-      ctx.lineTo(w / 2 - roadWidth, h);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(rightX, horizonY);
-      ctx.lineTo(w / 2 + roadWidth, h);
-      ctx.stroke();
-
-      // keresztvonalak (járdaszegély, útosztások)
-      for (let i = 0; i < 30; i++) {
-        const lineY = h - i * 100 + (scroll % 100);
-        if (lineY < horizonY) continue;
-
-        const ratio = 1 - (lineY - horizonY) / (h - horizonY);
-        const lineWidth = 200 * ratio;
-        ctx.beginPath();
-        ctx.moveTo(w / 2 - lineWidth / 2, lineY);
-        ctx.lineTo(w / 2 + lineWidth / 2, lineY);
-        ctx.stroke();
+        this.onResize();
+        requestAnimationFrame(this.loop);
       }
 
-      requestAnimationFrame(draw);
+      onResize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+      }
+
+      onScroll() {
+        this.scrollY = window.scrollY;
+      }
+
+      clear() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+
+      drawRoad() {
+        const { width: w, height: h } = this.canvas;
+        const ctx = this.ctx;
+
+        const horizonY = h * 0.3;
+        const baseRoadWidth = 400;
+        const depth = this.scrollY * this.scrollFactor;
+
+        const leftX = w / 2 - (baseRoadWidth - depth) / 2;
+        const rightX = w / 2 + (baseRoadWidth - depth) / 2;
+
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+
+        // bal út szél
+        ctx.beginPath();
+        ctx.moveTo(leftX, horizonY);
+        ctx.lineTo(w / 2 - baseRoadWidth, h);
+        ctx.stroke();
+
+        // jobb út szél
+        ctx.beginPath();
+        ctx.moveTo(rightX, horizonY);
+        ctx.lineTo(w / 2 + baseRoadWidth, h);
+        ctx.stroke();
+
+        // keresztvonalak (pl. útosztások)
+        for (let i = 0; i < 30; i++) {
+          const lineY = h - i * 100 + (this.scrollY % 100);
+          if (lineY < horizonY) continue;
+
+          const ratio = 1 - (lineY - horizonY) / (h - horizonY);
+          const lineWidth = 200 * ratio;
+
+          ctx.beginPath();
+          ctx.moveTo(w / 2 - lineWidth / 2, lineY);
+          ctx.lineTo(w / 2 + lineWidth / 2, lineY);
+          ctx.stroke();
+        }
+      }
+
+      loop() {
+        this.clear();
+        this.drawRoad();
+        requestAnimationFrame(this.loop);
+      }
     }
 
-    draw();
+    const canvas = document.getElementById("street");
+    const scene = new StreetScene(canvas);
   </script>
 </body>
 </html>
