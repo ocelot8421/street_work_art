@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Street_Work_Art</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      height: 3000px;
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="street"></canvas>
+
+  <script>
+    const canvas = document.getElementById("street");
+    const ctx = canvas.getContext("2d");
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    // fő függvény – scroll alapján rajzoljuk a perspektívát
+    function draw() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const scroll = window.scrollY; // mennyire "haladtunk" előre
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 2;
+
+      const horizonY = h * 0.3; // horizont
+      const roadWidth = 400;    // út szélessége, ami "távolodik"
+
+      // perspektíva miatt az út szélessége csökken
+      const depth = scroll * 0.5; // mintha előre mennénk
+
+      const leftX = w / 2 - (roadWidth - depth) / 2;
+      const rightX = w / 2 + (roadWidth - depth) / 2;
+
+      // út szélei
+      ctx.beginPath();
+      ctx.moveTo(leftX, horizonY);
+      ctx.lineTo(w / 2 - roadWidth, h);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(rightX, horizonY);
+      ctx.lineTo(w / 2 + roadWidth, h);
+      ctx.stroke();
+
+      // keresztvonalak (járdaszegély, útosztások)
+      for (let i = 0; i < 30; i++) {
+        const lineY = h - i * 100 + (scroll % 100);
+        if (lineY < horizonY) continue;
+
+        const ratio = 1 - (lineY - horizonY) / (h - horizonY);
+        const lineWidth = 200 * ratio;
+        ctx.beginPath();
+        ctx.moveTo(w / 2 - lineWidth / 2, lineY);
+        ctx.lineTo(w / 2 + lineWidth / 2, lineY);
+        ctx.stroke();
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+  </script>
+</body>
+</html>
