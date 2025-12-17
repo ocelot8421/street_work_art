@@ -33,25 +33,37 @@
     window.addEventListener("resize", resize);
     resize();
 
+    // main function – draw perspective based on scroll position
     // fő függvény – scroll alapján rajzoljuk a perspektívát
     function draw() {
       const w = canvas.width;
       const h = canvas.height;
-      const scroll = window.scrollY; // mennyire "haladtunk" előre
+
+      // how far we have "moved forward"
+      // mennyire "haladtunk" előre
+      const scroll = window.scrollY;
 
       ctx.clearRect(0, 0, w, h);
       ctx.strokeStyle = "white";
       ctx.lineWidth = 2;
 
-      const horizonY = h * 0.3; // horizont
-      const roadWidth = 400;    // út szélessége, ami "távolodik"
+      // horizon line position
+      // horizont
+      const horizonY = h * 0.3;
 
+      // road width that narrows with distance
+      // út szélessége, ami "távolodik"
+      const roadWidth = 400;
+
+      // depth effect caused by perspective
       // perspektíva miatt az út szélessége csökken
-      const depth = scroll * 0.5; // mintha előre mennénk
+      const depth = scroll * 0.5; // as if we were moving forward
+                                     // mintha előre mennénk
 
       const leftX = w / 2 - (roadWidth - depth) / 2;
       const rightX = w / 2 + (roadWidth - depth) / 2;
 
+      // road edges
       // út szélei
       ctx.beginPath();
       ctx.moveTo(leftX, horizonY);
@@ -63,12 +75,16 @@
       ctx.lineTo(w / 2 + roadWidth, h);
       ctx.stroke();
 
+      // cross lines (curbs, road markings)
       // keresztvonalak (járdaszegély, útosztások)
       for (let i = 0; i < 30; i++) {
         const lineY = h - i * 100 + (scroll % 100);
         if (lineY < horizonY) continue;
 
+        // perspective ratio based on distance
+        // arány a perspektíva miatt
         const ratio = 1 - (lineY - horizonY) / (h - horizonY);
+
         const lineWidth = 200 * ratio;
         ctx.beginPath();
         ctx.moveTo(w / 2 - lineWidth / 2, lineY);
